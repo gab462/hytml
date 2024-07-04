@@ -1,0 +1,4 @@
+dominate==2.9.1
+funcparserlib==1.0.1
+hy==0.29.0
+hyrule==0.6.0
