@@ -1,28 +1,33 @@
-(require hyrule [->> fn+])
-
-(import types [MappingProxyType]
-        itertools [islice accumulate repeat])
+(require hyrule [->> fn+ defmacro-kwargs])
 
 (defreader m
   (assert (= (.getc &reader) "{"))
-  (let [args (.parse-forms-until &reader "}")]
-    `(hy.I.types.MappingProxyType (dict ~@args))))
+  `{~@(->> (.parse-forms-until &reader "}")
+           (map (fn [a]
+                  (if (= (type a) hy.models.Keyword)
+                    (getattr a "name")
+                    a))))})
 
 (defn assoc [m #** kwargs]
-  (MappingProxyType (| m kwargs)))
+  (| m kwargs))
 
 (defn update [m #** kwargs]
   (let [args (->> kwargs
                   .items
                   (map (fn+ [[k f]] #(k (f (get m k)))))
                   dict)]
-    (MappingProxyType (| m args))))
+    (| m args)))
 
-(defn take [n it]
-  (islice it n))
+(defmacro-kwargs assoc! [m #** kwargs]
+  `(do
+     ~@(map (fn+ [[k v]] `(setv (get ~m ~k) ~v)) (.items kwargs))
+     ~m))
 
-(defn drop [n it]
-  (islice it n None))
+(defn drop [n xs]
+  (cut xs n None))
+
+(defn take [n xs]
+  (cut xs None n))
 
 (defn first [xs]
   (get xs 0))
@@ -30,5 +35,5 @@
 (defn second [xs]
   (get xs 1))
 
-(defn iterate [f x]
-  (accumulate (repeat x) (fn [fx _] (f fx))))
+(defn remove [n xs]
+  (+ (take n xs) (drop (+ n 1) xs)))
