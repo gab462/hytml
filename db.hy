@@ -4,8 +4,6 @@
                 Column :as column
                 Table :as table
                 Parameter :as param]
-        hyrule [flatten rest]
-        util [first second drop]
         functools [reduce]
         sqlite3)
 
@@ -31,14 +29,6 @@
         (.where (= t.type "table"))
         (.select "*")
         execute)))
-
-(defn create-contacts-table []
-  (-> query
-      (.create-table "contact")
-      (.columns (column "name" "TEXT" :nullable False)
-                (column "email" "TEXT" :nullable False)
-                (column "status" "TEXT" :nullable False))
-      execute))
 
 (defn insert-contact [name email status]
   (-> query
@@ -77,4 +67,22 @@
   (-> query
       (.from- "contact")
       (.select "rowid" "name" "email" "status")
+      execute))
+
+(defn create-contacts-table []
+  (-> query
+      (.create-table "contact")
+      (.columns (column "name" "TEXT" :nullable False)
+                (column "email" "TEXT" :nullable False)
+                (column "status" "TEXT" :nullable False))
+      execute))
+
+(defn setup-db []
+  (create-contacts-table)
+  (-> query
+      (.into "contact")
+      (.insert #("Joe Smith" "joe@smith.org" "Active")
+               #("Angie MacDowell" "angie@macdowell.org" "Active")
+               #("Fuqua Tarkenton" "fuqua@tarkenton.org" "Active")
+               #("Kim Yee" "kim@yee.org" "Inactive"))
       execute))
